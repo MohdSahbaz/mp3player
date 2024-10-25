@@ -7,37 +7,41 @@ const AllMusic = () => {
   const navigate = useNavigate();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen text-white">
+        Loading...
+      </div>
+    );
   }
 
   if (error) {
-    return <h1>{error}</h1>;
+    return <h1 className="text-red-500 text-center py-10">{error}</h1>;
   }
 
   return (
-    <div className="bg-gradient-to-r from-teal-500 via-green-400 to-emerald-200 flex flex-col px-10 py-6 space-y-6 min-h-screen">
-      <h1 className="md:text-4xl text-2xl font-bold text-black shadow-lg p-2 rounded-lg bg-emerald-200/[0.5] text-center">
-        All Songs
+    <div className="bg-gradient-to-b from-gray-900 to-gray-800 flex flex-col items-center px-4 py-8 space-y-8 min-h-screen text-white">
+      <h1 className="text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-emerald-300 text-center">
+        Explore All Songs
       </h1>
 
       {/* All Songs Section */}
-      <div className="bg-gray-800/[0.5] p-4 pb-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold text-yellow-100 mb-4">
-          Available Songs
+      <div className="bg-gray-900/[0.6] p-6 rounded-xl shadow-xl w-full max-w-7xl">
+        <h2 className="text-xl md:text-2xl font-semibold text-yellow-200 mb-5">
+          Available Tracks
         </h2>
-        <div className="grid md:grid-cols-3 grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-3 grid-cols-2 gap-6">
           {allSong.map((music) => (
             <div
               onClick={() => navigate(`/song/${music.id}/${music.name}`)}
               key={music.id}
-              className="flex flex-col items-center bg-white p-4 rounded-lg shadow-md cursor-pointer"
+              className="bg-gray-800 hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-1 p-4 rounded-lg shadow-lg cursor-pointer group"
             >
               <img
                 src={music.coverURL}
                 alt={music.name}
-                className="w-32 h-36 object-cover rounded-md mb-2"
+                className="w-full h-40 object-cover rounded-lg mb-4 shadow-md"
               />
-              <h3 className="text-lg font-medium text-gray-800">
+              <h3 className="text-lg font-semibold text-white group-hover:text-teal-400 transition-colors duration-200">
                 {music.name}
               </h3>
             </div>

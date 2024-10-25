@@ -7,38 +7,36 @@ const SingleMusic = () => {
   const { error, loading, recommendedMusic } = useContext(HomeContext);
   const { id, name } = useParams();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio, setAudio] = useState(null); // Store the Audio object here
+  const [audio, setAudio] = useState(null);
   const [coverURL, setCoverURL] = useState("");
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
 
-  // Fetch song from API and create the Audio object
   useEffect(() => {
     const fetchSong = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/api/song/${id}`);
-        const data = response.data; // Axios automatically parses JSON
-        const audioObject = new Audio(data.songUrl); // Create Audio object with song URL
+        const response = await axios.get(
+          `http://localhost:3000/api/song/${id}`
+        );
+        const data = response.data;
+        const audioObject = new Audio(data.songUrl);
         setAudio(audioObject);
-        setCoverURL(data.coverURL);  
+        setCoverURL(data.coverURL);
       } catch (err) {
         console.log("Error while fetching song");
       }
     };
-
-    fetchSong(); // Call the async function inside useEffect
+    fetchSong();
   }, [id]);
 
-  // Attach event listeners to the Audio object for duration and time update
   useEffect(() => {
     if (audio) {
-      audio.addEventListener("loadedmetadata", () => {
-        setDuration(audio.duration);
-      });
-
-      audio.addEventListener("timeupdate", () => {
-        setCurrentTime(audio.currentTime);
-      });
+      audio.addEventListener("loadedmetadata", () =>
+        setDuration(audio.duration)
+      );
+      audio.addEventListener("timeupdate", () =>
+        setCurrentTime(audio.currentTime)
+      );
 
       return () => {
         audio.removeEventListener("loadedmetadata", () => {});
@@ -48,21 +46,15 @@ const SingleMusic = () => {
   }, [audio]);
 
   const togglePlayPause = () => {
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
+    isPlaying ? audio.pause() : audio.play();
     setIsPlaying(!isPlaying);
   };
 
-  // Function to handle progress bar click
   const handleProgressClick = (event) => {
     const { offsetX, currentTarget } = event.nativeEvent;
     const progressBarWidth = currentTarget.offsetWidth;
-    const clickPosition = offsetX / progressBarWidth;
-    const newTime = clickPosition * duration;
-    audio.currentTime = newTime; // Jump to the clicked position in the song
+    const newTime = (offsetX / progressBarWidth) * duration;
+    audio.currentTime = newTime;
     setCurrentTime(newTime);
   };
 
@@ -72,96 +64,92 @@ const SingleMusic = () => {
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  if (error) {
-    return <h1>{error}</h1>;
-  }
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen text-white">
+        Loading...
+      </div>
+    );
+  if (error) return <h1 className="text-red-500 text-center py-10">{error}</h1>;
 
   return (
-    <div className="bg-gradient-to-r from-teal-500 via-green-400 to-emerald-200 flex flex-col px-10 py-6 space-y-6 min-h-screen">
-      <h1 className="md:text-4xl text-2xl font-bold text-black shadow-lg p-2 rounded-lg bg-emerald-200/[0.5] text-center">
+    <div className="bg-gradient-to-b from-gray-900 to-gray-800 flex flex-col px-4 py-8 min-h-screen text-white">
+      <h1 className="text-3xl md:text-5xl font-bold text-center text-white bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-400 my-4">
         Now Playing: {name}
       </h1>
-  
-      {/* Music Player Controls with Cover */}
-      <div className="bg-gray-800/[0.5] p-4 rounded-lg shadow-lg flex space-x-6">
-        {/* Song Cover */}
+
+      {/* Music Player */}
+      <div className="bg-gray-900/60 backdrop-blur-md p-6 rounded-xl shadow-lg flex flex-col items-center space-y-6">
         {coverURL && (
           <img
             src={coverURL}
             alt={`${name} Cover`}
-            className="w-24 h-24 object-cover rounded-lg"
+            className="w-48 h-48 object-cover rounded-lg shadow-lg"
           />
         )}
-  
-        {/* Controls and Progress Bar */}
-        <div className="flex-1 space-y-4">
-          {/* Progress Bar */}
+
+        <div className="w-full">
           <div
-            className="w-full bg-gray-700 h-2 rounded-full mb-2 relative cursor-pointer"
+            className="relative w-full bg-gray-700 h-3 rounded-full overflow-hidden cursor-pointer"
             onClick={handleProgressClick}
           >
             <div
-              className="bg-blue-500 h-2 rounded-full"
+              className="absolute top-0 left-0 h-3 bg-indigo-500 rounded-full transition-all"
               style={{ width: `${(currentTime / duration) * 100}%` }}
             ></div>
           </div>
-          <div className="flex justify-between text-sm text-yellow-100">
+          <div className="flex justify-between text-sm text-gray-300 mt-1">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
-  
-          {/* Control Buttons Below the Progress Bar */}
-          <div className="flex justify-center space-x-4 mt-4">
-            {/* Reset Button (Rewind) */}
-            <button
-              onClick={() => { audio.currentTime = 0; setCurrentTime(0); }}
-              className="text-3xl bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition"
-            >
-              ⏮
-            </button>
-  
-            {/* Pause/Resume Button */}
-            <button
-              onClick={togglePlayPause}
-              className="text-3xl bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition"
-            >
-              {isPlaying ? "⏸️" : "▶️"}
-            </button>
-  
-            {/* Skip 10 Seconds Button (Fast-Forward) */}
-            <button
-              onClick={() => { 
-                const newTime = audio.currentTime + 10;
-                audio.currentTime = newTime <= duration ? newTime : duration;
-                setCurrentTime(audio.currentTime);
-              }}
-              className="text-3xl bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition"
-            >
-              ⏭
-            </button>
-          </div>
+        </div>
+
+        <div className="flex items-center justify-center space-x-6">
+          <button
+            onClick={() => {
+              audio.currentTime = 0;
+              setCurrentTime(0);
+            }}
+            className="text-2xl text-white"
+          >
+            ⏮
+          </button>
+
+          <button onClick={togglePlayPause} className="text-3xl text-white">
+            {isPlaying ? "⏸️" : "▶️"}
+          </button>
+
+          <button
+            onClick={() => {
+              const newTime = audio.currentTime + 10;
+              audio.currentTime = newTime <= duration ? newTime : duration;
+              setCurrentTime(audio.currentTime);
+            }}
+            className="text-2xl text-white"
+          >
+            ⏭
+          </button>
         </div>
       </div>
-  
-      {/* Recommended Music Section */}
-      <div className="bg-gray-800/[0.5] p-4 pb-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold text-yellow-100">Recommended Music</h2>
-        <div className="grid md:grid-cols-3 grid-cols-2 gap-4">
+
+      {/* Recommended Music */}
+      <div className="bg-gray-900/50 backdrop-blur-md p-6 mt-8 rounded-xl shadow-lg">
+        <h2 className="text-2xl font-semibold text-indigo-300 mb-4">
+          Recommended Music
+        </h2>
+        <div className="grid md:grid-cols-3 sm:grid-cols-2 gap-4">
           {recommendedMusic.map((music) => (
             <a
               href={`/song/${music.id}/${music.name}`}
               key={music.id}
-              className="flex flex-col items-center bg-white p-4 rounded-lg shadow-md cursor-pointer"
+              className="flex flex-col items-center bg-gray-800 p-4 rounded-lg shadow-md hover:bg-gray-700 transition transform hover:scale-105"
             >
               <img
                 src={music.coverURL}
                 alt={music.name}
-                className="w-32 h-36 object-cover rounded-md mb-2"
+                className="w-28 h-28 object-cover rounded-md mb-2 shadow-md"
               />
-              <h3 className="text-lg font-medium text-gray-800">{music.name}</h3>
+              <h3 className="text-lg font-medium text-white">{music.name}</h3>
             </a>
           ))}
         </div>
@@ -171,5 +159,3 @@ const SingleMusic = () => {
 };
 
 export default SingleMusic;
-
-
